@@ -1,0 +1,5 @@
+{
+  "directory": "public/vendor/",
+  "strict-ssl": true,
+  "registry": "http://bower.herokuapp.com"
+}

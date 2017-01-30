@@ -1,0 +1,87 @@
+<% layout('layout/page') -%>
+<% block('title', "Чат") -%>
+
+<div id="room">
+  <ul class="list-unstyled"></ul>
+  <form>
+    <input disabled class="form-control" autocomplete="off" autofocus placeholder="Сообщение...">
+  </form>
+</div>
+
+<script src="/vendor/socket.io-client/dist/socket.io.min.js"></script>
+<script>
+;(function() {
+  const input = $('#room input');
+  const ul = $('#room ul');
+  const form = $('#room form');
+  const socket = io('', {
+    'reconnectionAttempts': 5
+  });
+
+  socket
+    .on('message', function(username, message) {
+      printMessage(username + '> ' + message);
+    })
+    .on('leave', function(username) {
+        printStatus(username + " вышел из чата", "yellow");
+      })
+    .on('join', function(username) {
+      printStatus(username + " вошёл в чат", "yellow");
+    })
+    .on('connect', function() {
+      printStatus("соединение установлено", "#d6f1e9");
+      form.on('submit', sendMessage);
+      input.prop('disabled', false);
+    })
+    .on('disconnect', function() {
+      printStatus("соединение потеряно", "#f1d6ee");
+      form.off('submit', sendMessage);
+      input.prop('disabled', true);
+      //setTimeout(reconnect, 500);
+    })
+    .on('logout', function() {
+      location.href = "/";
+     })
+    .on('error', function(reason) {
+      if (reason == "handshake unauthorized") {
+        printStatus("вы вышли из сайта");
+      } else {
+        setTimeout(function() {
+          socket.socket.connect();
+        }, 500);
+      }
+    })
+    .on('reconnect_failed', function() {
+      console.log('connection lost');
+      reconnect();
+    });
+
+  const sendMessage = function() {
+    const text = input.val();
+    socket.emit('message', text, function(data) {
+      printMessage(data);
+    });
+    input.val('');
+    return false;
+  }
+
+  const printMessage = function(text) {
+    $('<li>').text(text).appendTo(ul);
+  }
+
+  const printStatus = function(status, color) {
+    $('<li>')
+    .css('background-color', color)
+    .append($('<i>')
+    .addClass('log')
+    .text(status)).appendTo(ul);
+  }
+
+  const reconnect =function () {
+    socket.once('error', function() {
+      setTimeout(reconnect, 500);
+    });
+    socket.connect();
+  }
+})();
+</script>
