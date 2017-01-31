@@ -9,6 +9,7 @@ const favicon = require('serve-favicon');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const errorhandler = require('errorhandler')
 
 const index = require('./routes/index');
 const users = require('./routes/users');
@@ -68,7 +69,7 @@ app.use(function(err, req, res, next) {
     res.sendHttpError(err);
   } else {
     if (app.get('env') == 'development') {
-      express.errorHandler()(err, req, res, next);
+      errorhandler()(err, req, res, next);
     } else {
 
       err = new HttpError(500);
